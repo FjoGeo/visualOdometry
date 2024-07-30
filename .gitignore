@@ -2,3 +2,8 @@ KITTI_sequences_1/
 KITTI_sequences_2/
 KITTI_sequence_1/*
 KITTI_sequence_2/*
+.venv/
+*.html
+lib\visualization/__pycache__
+lib\visualization/__pycache__/*
+*.pyc
