@@ -23,7 +23,7 @@ class VisualOdometry():
         self.orb = cv2.ORB_create(3000)
         FLANN_INDEX_LSH = 6
         index_params = dict(algorithm=FLANN_INDEX_LSH, table_number=6, key_size=12, multi_probe_level=1)
-        search_params = dict(checks=50)
+        search_params = dict(checks=500)
         self.flann = cv2.FlannBasedMatcher(indexParams=index_params, searchParams=search_params)
 
 
