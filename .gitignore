@@ -7,3 +7,6 @@ KITTI_sequence_2/*
 lib\visualization/__pycache__
 lib\visualization/__pycache__/*
 *.pyc
+amb_sequences/
+amb_sequences/*
+*.csv

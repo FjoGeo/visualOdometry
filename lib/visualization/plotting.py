@@ -49,6 +49,29 @@ def visualize_paths(gt_path, pred_path, html_tile="", title="VO exercises", file
                  Div(text="<h2>Paths</h1>"),
                  [fig1, fig2],
                  ], sizing_mode='scale_width'))
+    
+
+def visualize_paths2(pred_path, html_tile="", title="Visual Odometry", file_out="plot.html"):
+    output_file(file_out, title=html_tile)
+    
+    pred_path = np.array(pred_path)
+
+    tools = "pan,wheel_zoom,box_zoom,box_select,lasso_select,reset"
+
+    source = ColumnDataSource(data=dict(px=pred_path[:, 0], py=pred_path[:, 1]))
+
+    fig1 = figure(title="Estimated Path", tools=tools, match_aspect=True, width_policy="max", toolbar_location="above",
+                  x_axis_label="x", y_axis_label="y")
+    
+    fig1.circle("px", "py", source=source, color="green", hover_fill_color="firebrick", legend_label="Pred")
+    fig1.line("px", "py", source=source, color="green", legend_label="Pred")
+
+    fig1.legend.click_policy = "hide"
+
+    show(layout([Div(text=f"<h1>{title}</h1>"),
+                 Div(text="<h2>Paths</h1>"),
+                 [fig1],
+                 ], sizing_mode='scale_width'))
 
 
 def make_residual_plot(x, residual_init, residual_minimized):
