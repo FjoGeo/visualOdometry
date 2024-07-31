@@ -57,7 +57,7 @@ class VisualOdometry():
         # Find matches
         matches = self.flann.knnMatch(des1, des2, k=2)
 
-        # Find the matches there do not have a to high distance
+        # Find the matches there do not have a too high distance
         good = []
         try:
             for m, n in matches:
@@ -66,16 +66,20 @@ class VisualOdometry():
         except ValueError:
             pass
 
-        draw_params = dict(matchColor = -1, # draw matches in green color
-                 singlePointColor = None,
-                 matchesMask = None, # draw only inliers
-                 flags = 2)
+        # If not enough good matches, return None
+        if len(good) < 8:
+            return None, None
+        
+        # draw_params = dict(matchColor = -1, # draw matches in green color
+        #     singlePointColor = None,
+        #     matchesMask = None, # draw only inliers
+        #     flags = 2)
 
-        img3 = cv2.drawMatches(self.images[i], kp1, self.images[i-1],kp2, good ,None,**draw_params)
-        cv2.imshow("image", img3)
-        cv2.waitKey(200)
+        # img3 = cv2.drawMatches(self.images[i], kp1, self.images[i-1],kp2, good ,None,**draw_params)
+        # cv2.imshow("image", img3)
+        # cv2.waitKey(200)
 
-        # Get the image points form the good matches
+        # Get the image points from the good matches
         q1 = np.float32([kp1[m.queryIdx].pt for m in good])
         q2 = np.float32([kp2[m.trainIdx].pt for m in good])
         return q1, q2
@@ -83,16 +87,23 @@ class VisualOdometry():
 
     def get_pose(self, q1, q2):
         # Essential matrix
-        E, _ = cv2.findEssentialMat(q1, q2, self.K, threshold=1)
+        E, mask = cv2.findEssentialMat(q1, q2, self.K, threshold=1)
+
+        # If not enough inliers, return None
+        if E is None or np.sum(mask) < 8:
+            return None
 
         # Decompose the Essential matrix into R and t
         R, t = self.decomp_essential_mat(E, q1, q2)
 
+        if R is None or t is None:
+            return None
+
         # Get transformation matrix
         transformation_matrix = self._form_transf(R, np.squeeze(t))
         return transformation_matrix
-    
 
+    
 
     def decomp_essential_mat(self, E, q1, q2):
         def sum_z_cal_relative_scale(R, t):
@@ -144,27 +155,31 @@ class VisualOdometry():
         return [R1, t]
     
 
+
 def main():
-    data_dir = "amb_sequences"
+    data_dir = "amb_sequences copy"
     vo = VisualOdometry(data_dir)
  
     estimated_path = []
-    # for i in range(len(vo.images)):
-    for i in range(len(vo.images)):
+    cur_pose = np.eye(4)
+    for i in range(1, len(vo.images)):
         try:
-            if i == 0:
-                cur_pose = np.eye((4))
+            q1, q2 = vo.get_matches(i)
+            if q1 is None or q2 is None:
+                continue
 
-            else:
-                q1, q2 = vo.get_matches(i)
-                transf = vo.get_pose(q1, q2)
-                cur_pose = np.matmul(cur_pose, np.linalg.inv(transf))
+            transf = vo.get_pose(q1, q2)
+            if transf is None or np.isnan(transf).any() or np.isinf(transf).any():
+                continue
+
+            cur_pose = np.matmul(cur_pose, np.linalg.inv(transf))
+
             estimated_path.append((cur_pose[0, 3], cur_pose[2, 3]))
-        except:
-            pass
+        except Exception as e:
+            continue
+    
     plotting.visualize_paths2(estimated_path, "Visual Odometry", file_out=os.path.basename(data_dir) + ".html")
     np.savetxt('estimated_path.csv', estimated_path, delimiter=',')
-
 
 if __name__ == "__main__":
     main()

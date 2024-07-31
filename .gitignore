@@ -10,3 +10,6 @@ lib\visualization/__pycache__/*
 amb_sequences/
 amb_sequences/*
 *.csv
+amb_sequences copy/
+amb_sequences copy/*
+test.py
