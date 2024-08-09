@@ -4,7 +4,6 @@ import cv2
 from tqdm import tqdm
 
 from lib.visualization import plotting
-from lib.visualization.video import play_trip
 
 class VisualOdometry():
     def __init__(self, data_dir):
@@ -70,10 +69,11 @@ class VisualOdometry():
         if len(good) < 8:
             return None, None
         
-        # draw_params = dict(matchColor = -1, # draw matches in green color
-        #     singlePointColor = None,
-        #     matchesMask = None, # draw only inliers
-        #     flags = 2)
+        # Drawing
+        draw_params = dict(matchColor = -1, # draw matches in green color
+            singlePointColor = None,
+            matchesMask = None, # draw only inliers
+            flags = 2)
 
         # img3 = cv2.drawMatches(self.images[i], kp1, self.images[i-1],kp2, good ,None,**draw_params)
         # cv2.imshow("image", img3)
@@ -157,12 +157,12 @@ class VisualOdometry():
 
 
 def main():
-    data_dir = "amb_sequences copy"
+    data_dir = "amb_sequences"
     vo = VisualOdometry(data_dir)
  
     estimated_path = []
     cur_pose = np.eye(4)
-    for i in range(1, len(vo.images)):
+    for i in tqdm(range(1, len(vo.images))):
         try:
             q1, q2 = vo.get_matches(i)
             if q1 is None or q2 is None:
@@ -178,7 +178,7 @@ def main():
         except Exception as e:
             continue
     
-    plotting.visualize_paths2(estimated_path, "Visual Odometry", file_out=os.path.basename(data_dir) + ".html")
+    # plotting.visualize_paths2(estimated_path, "Visual Odometry", file_out=os.path.basename(data_dir) + ".html")
     np.savetxt('estimated_path.csv', estimated_path, delimiter=',')
 
 if __name__ == "__main__":
